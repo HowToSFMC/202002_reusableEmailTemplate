@@ -1,0 +1,139 @@
+
+
+%%[ /* Dynamic Email Template - Base Email */ ]%%
+
+%%[
+
+/* Setting defaults for use in template */
+set @MemberID = AttributeValue('MemberID')
+set @EmailName = AttributeValue('emailname_')
+set @EmailID = AttributeValue('_emailid')
+set @DataSourceName = AttributeValue('_DataSourceName')
+set @EmailAddress = AttributeValue('emailaddr')
+set @subscriberKey = AttributeValue('_subscriberkey')
+
+/** Determine Business Unit Environment (if necessary)**/
+if @MemberID == 12345 then
+  set @Production = 1
+elseif @MemberID == 23456 then
+  set @Sandbox = 1
+endif
+
+/** Set Data Extensions to Reference **/
+/* can be BU based if you want, but I usually recommend a single shared source */
+if @Production then
+  set @contentDE = ""myProdContentDE"" 
+elseif @Sandbox then
+  set @contentDE = ""mySandContentDE""
+endif
+
+/** Determines Content to be displayed **/
+/* I am using EmailID as it is more reliable and less risk*/
+/* but can use EmailName if confident in governance */
+
+set @styleIDs = Lookup(@contentDE,""styleID"",""MemberID"",@MemberID,""EmailID"",@EmailID)
+set @headerIDs = Lookup(@contentDE,""headerIDs"",""MemberID"",@MemberID,""EmailID"",@EmailID)
+set @bodyIDs = Lookup(@contentDE,""bodyIDs"",""MemberID"",@MemberID,""EmailID"",@EmailID)
+set @footerIDs = Lookup(@contentDE,""footerIDs"",""MemberID"",@MemberID,""EmailID"",@EmailID)
+
+/* Each of these fields inside of the Content DE will be pipe delimited list */
+/* This list will be of all the content areas (in order) that should be displayed */
+/* E.g. 123|555|3455 - where 123 is first displayed and 3455 is last */
+
+]%%
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />
+    <meta http-equiv=""X-UA-Compatible"" content=""IE=edge"" />
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"" />
+    <title>%%member_busname%%</title>
+    %%[ /* STYLES */ ]%%
+               %%[
+        IF INDEXOF(@StyleIDS,'|') > 0 THEN
+        SET @styleRowSet = BuildRowsetFromString(@styleIDs,'|')
+        
+        FOR @i = 1 TO Rowcount(@styleRowSet) DO
+
+          set @row = Row(@styleRowSet,@i)
+          set @id = Field(@row,1)
+      ]%%
+      %%=TreatAsContent(ContentBlockByID(@styleIDs))=%%
+      %%[ NEXT @i 
+      ELSE ]%%
+        %%=TreatAsContent(ContentBlockByID(@styleIDs))=%%
+      %%[ENDIF]%%
+  </head>
+  <body>
+
+    %%[/* HEADER */]%%
+    <table class=""headerTable"" cellpadding=""0"" cellspacing=""0"" border=""0"" width=""100%"" style="""">
+      <tr>
+        <td align=""center"" >
+          %%[
+            IF INDEXOF(@headerIDS,'|') > 0 THEN
+              SET @headRowSet = BuildRowsetFromString(@headerIDs,'|')
+                
+                FOR @i = 1 TO Rowcount(@headRowSet) DO
+
+                  set @row = Row(@headRowSet,@i)
+                  set @id = Field(@row,1)
+          ]%%
+                    %%=TreatAsContent(ContentBlockByID(@id))=%%
+          %%[   NEXT @i 
+            ELSE]%%
+                %%=TreatAsContent(ContentBlockByID(@headerIDs))=%%
+          %%[ENDIF]%%
+        </td>
+      </tr>
+    </table>
+
+    %%[/* BODY */]%%
+    <table class=""bodyTable"" cellpadding=""0"" cellspacing=""0"" border=""0"" width=""100%"" style="""">
+      <tr>
+        <td align=""center"" >
+          %%[
+            IF INDEXOF(@bodyIDS,'|') > 0 THEN
+              SET @bodyRowSet = BuildRowsetFromString(@bodyIDs,'|')
+                
+                FOR @i = 1 TO Rowcount(@bodyRowSet) DO
+
+                  set @row = Row(@bodyRowSet,@i)
+                  set @id = Field(@row,1)
+          ]%%
+                    %%=TreatAsContent(ContentBlockByID(@id))=%%
+          %%[   NEXT @i 
+            ELSE]%%
+                %%=TreatAsContent(ContentBlockByID(@bodyIDs))=%%
+          %%[ENDIF]%%
+        </td>
+      </tr>
+    </table>
+
+    %%[/* FOOTER */]%%
+    <table class=""footerTable"" cellpadding=""0"" cellspacing=""0"" border=""0"" width=""100%"" style="""">
+      <tr>
+        <td width=""636"" align=""center"" >
+                  %%[
+                    IF INDEXOF(@bodyIDS,'|') > 0 THEN
+                      SET @DiscRowSet = BuildRowsetFromString(@DisclaimerIDs,'|')
+                      FOR @i = 1 TO Rowcount(@DiscRowSet) DO
+
+                      set @row = Row(@DiscRowSet,@i)
+                      set @id = Field(@Row,1,0)
+                    ]%%
+                        %%=TreatAsContent(ContentBlockByID(@id))=%%
+                    %%[ NEXT @i
+                        ELSE]%%
+                  %%=TreatAsContent(ContentBlockByID(@headerIDs))=%%
+                %%[ENDIF]%%
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+  </body>
+</html>

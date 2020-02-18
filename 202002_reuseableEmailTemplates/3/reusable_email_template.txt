@@ -1,0 +1,1 @@
+If there is an email which needs to be sent to different countries in different languages and the email body is same. I can create a translation DE which will have the fields as key value and country. I will use look up function to pull the contents as per country in the email template via ampscript. If in future there is content is changed only translation needs to be updated.

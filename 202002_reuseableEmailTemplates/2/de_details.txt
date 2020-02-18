@@ -1,0 +1,9 @@
+The Data Extension would be:
+
+MemberID  |  EmailID  |  styleIDs  |  headerIDs  |  bodyIDs  |  footerIDs
+
+with MemberID and EmailID as primary keys.
+
+Each of the 'IDs' columns would be a pipe delimited list of all the Content Block IDs to be utilized for the Email. (e.g. 123|343|6454).  This means that these columns would need to be set as 'text' and not number. Please do note that the IDs are in cascading order, so in the example it will display 123 first and 6454 last.
+
+The below is just a very basic example of this, with tweaking and customization you can turn this thing into an amazing tool that is really simple to use (just make content then put the IDs into a DE).
